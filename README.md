@@ -29,7 +29,7 @@ Usage example
 
 	# ~~~ Begin Authentication ~~~
 
-		client = SRP::Client.new(1024)
+		client = SRP::Client.new(prime_length)
 		A = client.start_authentication()
 
 
@@ -40,7 +40,7 @@ Usage example
 		salt = @auth[:salt]
 
 		# Server generates challenge for the client.
-		verifier = SRP::Verifier.new(1024)
+		verifier = SRP::Verifier.new(prime_length)
 		session = srp.get_challenge_and_proof(username, v, salt, A)
 
 		# Server sends the challenge containing salt and B to client.
@@ -57,18 +57,17 @@ Usage example
 
 	# Client => Server: M
 
-		verifier.verify_session(session[:proof], client_M) # should be true
+		server_H_AMK = verifier.verify_session(session[:proof], client_M)
+		# Is false if authentication failed.
 
 		# At this point, the client and server should have a common session key
 		# that is secure (i.e. not known to an outside party).  To finish
 		# authentication, they must prove to each other that their keys are
 		# identical.
 
-		server_H_AMK = verifier.H_AMK
-
 
 	# Server => Client: HAMK
 
-		client.H_AMK == server_H_AMK
+		client.verify(server_H_AMK) == true
 
 
