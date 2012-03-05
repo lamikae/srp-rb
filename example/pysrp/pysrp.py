@@ -1,17 +1,53 @@
-  # N    A large safe prime (N = 2q+1, where q is prime)
-  #      All arithmetic is done modulo N.
-  # g    A generator modulo N
-  # k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
-  # s    User's salt
-  # I    Username
-  # p    Cleartext Password
-  # H()  One-way hash function
-  # ^    (Modular) Exponentiation
-  # u    Random scrambling parameter
-  # a,b  Secret ephemeral values
-  # A,B  Public ephemeral values
-  # x    Private key (derived from p and s)
-  # v    Password verifier
+#
+"""
+This package provides an implementation of the Secure Remote
+Password protocol (SRP). SRP is a cryptographically
+strong authentication protocol for password-based, mutual
+authentication over an insecure network connection.
+
+Forked from //code.google.com/p/pysrp/
+
+Copyright (c) 2010, Tom Cocagne
+Copyright (c) 2012, Mikael Lammentausta
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Python Software Foundation nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL TOM COCAGNE BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+# N    A large safe prime (N = 2q+1, where q is prime)
+#      All arithmetic is done modulo N.
+# g    A generator modulo N
+# k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
+# s    User's salt
+# I    Username
+# p    Cleartext Password
+# H()  One-way hash function
+# ^    (Modular) Exponentiation
+# u    Random scrambling parameter
+# a,b  Secret ephemeral values
+# A,B  Public ephemeral values
+# x    Private key (derived from p and s)
+# v    Password verifier
 
 import hashlib
 import os
@@ -122,15 +158,15 @@ def get_ng( ng_type, n_hex, g_hex ):
     if ng_type < NG_CUSTOM:
         n_hex, g_hex = _ng_const[ ng_type ]
     return int(n_hex,16), int(g_hex,16)
-              
+
 
 def bytes_to_long(s):
     n = ord(s[0])
     for b in ( ord(x) for x in s[1:] ):
         n = (n << 8) | b
     return n
-    
-    
+
+
 def long_to_bytes(n):
     l = list()
     x = 0
@@ -143,23 +179,12 @@ def long_to_bytes(n):
     l.reverse()
     return ''.join(l)
 
-    
+
 def get_random( nbytes ):
     return bytes_to_long( os.urandom( nbytes ) )
 
-    
-def old_H( hash_class, s1, s2 = '', s3=''):
-    if isinstance(s1, (long, int)):
-        s1 = long_to_bytes(s1)
-    if s2 and isinstance(s2, (long, int)):
-        s2 = long_to_bytes(s2)
-    if s3 and isinstance(s3, (long, int)):
-        s3 = long_to_bytes(s3)
-    s = s1 + s2 + s3
-    return long(hash_class(s).hexdigest(), 16)
-    
-    
-def H( hash_class, *args, **kwargs ):
+
+def old_H( hash_class, *args, **kwargs ):
     h = hash_class()
     
     for s in args:
@@ -169,25 +194,48 @@ def H( hash_class, *args, **kwargs ):
     return long( h.hexdigest(), 16 )
 
 
+def H_pack( instr ):
+    """Pack the input string to hex string.
 
-#N = 0xAC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC3192943DB56050A37329CBB4A099ED8193E0757767A13DD52312AB4B03310DCD7F48A9DA04FD50E8083969EDB767B0CF6095179A163AB3661A05FBD5FAAAE82918A9962F0B93B855F97993EC975EEAA80D740ADBF4FF747359D041D5C33EA71D281E446B14773BCA97B43A23FB801676BD207A436C6481F1D2B9078717461A5B9D32E688F87748544523B524B0D57D5EA77A2775D2ECFA032CFBDBF52FB3786160279004E57AE6AF874E7303CE53299CCC041C7BC308D82A5698F3A8D0C38271AE35F8E9DBFBB694B5C803D89F7AE435DE236D525F54759B65E372FCD68EF20FA7111F9E4AFF73;
-#g = 2;    
-#k = H(N,g)  
+    In packed form, every two letters are treated as hexadecimal byte.
+    Ruby equivalent: Array#pack H* hex string (high nibble first) 
+        Digest::SHA1.hexdigest([instr].pack('H*'))
+    """
+    if (len(instr) % 2) != 0:
+        instr += "0" 
+    return "".join([
+        chr(int(instr[i] + instr[i+1], 16)) \
+        for i in range(0, len(instr)) \
+        if (i % 2 == 0)
+    ])
+
+
+def H( nlen, hash_class, *a ):
+    """"One-way hash function.
+
+    Requires N hex length for padding width.
+    For 1024 bit N, this is 256.
+    """
+    hashin = ""
+    for s in a:
+        if s is None:
+            continue
+        shex = "%x" % s if isinstance(s, (long, int)) else s
+        hashin += '0' * (nlen - len(shex)) + shex
+    return long( hash_class(H_pack(hashin)).hexdigest(), 16 )
+
 
 def HNxorg( hash_class, N, g ):
-    hN = hash_class( long_to_bytes(N) ).digest()
-    hg = hash_class( long_to_bytes(g) ).digest()
+    hn = hash_class(H_pack("%x" % N)).hexdigest()
+    hg = hash_class(H_pack("%01x" % g)).hexdigest()
+    return long(hn,16) ^ long(hg,16)
 
-    return ''.join( chr( ord(hN[i]) ^ ord(hg[i]) ) for i in range(0,len(hN)) )
-    
-    
-    
+
 def gen_x( hash_class, salt, username, password ):
-    return H( hash_class, salt, H( hash_class, username + ':' + password ) )
-    
-    
-    
-    
+    return old_H( hash_class, salt, old_H( hash_class, username + ':' + password ) )
+
+
+'''
 def create_salted_verification_key( username, password, hash_alg=SHA1, ng_type=NG_2048, n_hex=None, g_hex=None ):
     if ng_type == NG_CUSTOM and (n_hex is None or g_hex is None):
         raise ValueError("Both n_hex and g_hex are required when ng_type = NG_CUSTOM")
@@ -197,30 +245,21 @@ def create_salted_verification_key( username, password, hash_alg=SHA1, ng_type=N
     _v = long_to_bytes( pow(g,  gen_x( hash_class, _s, username, password ), N) )
     
     return _s, _v
-    
+'''
 
-    
-def calculate_M( hash_class, N, g, I, s, A, B, K ):
-    h = hash_class()
-    h.update( HNxorg( hash_class, N, g ) )
-    h.update( hash_class(I).digest() )
-    h.update( long_to_bytes(s) )
-    h.update( long_to_bytes(A) )
-    h.update( long_to_bytes(B) )
-    h.update( K )
-    return h.digest()
+# M = H(H(N) xor H(g), H(I), s, A, B, K)
+def calculate_M( nlen, hash_class, N, g, I, s, A, B, K ):
+    hxor = "%x" % HNxorg( hash_class, N, g )
+    hi = hash_class(I).hexdigest()
+    return H(nlen, hash_class, hxor, hi, s, A, B, K )
 
 
-def calculate_H_AMK( hash_class, A, M, K ):
-    h = hash_class()
-    h.update( long_to_bytes(A) )
-    h.update( M )
-    h.update( K )
-    return h.digest()
+def calculate_H_AMK( nlen, hash_class, A, M, K ):
+    return H(nlen, hash_class, A, M, K )
 
 
   
-  
+'''
 class Verifier (object):
   
     def __init__(self, username, bytes_s, bytes_v, bytes_A, hash_alg=SHA1, ng_type=NG_2048, n_hex=None, g_hex=None):
@@ -234,8 +273,9 @@ class Verifier (object):
         
         N,g        = get_ng( ng_type, n_hex, g_hex )
         hash_class = _hash_map[ hash_alg ]
-        k          = H( hash_class, N, g )
-        
+        k          = H(256, hash_class, N, g )
+        nlen       = len("%x" % N)
+
         self.hash_class = hash_class
         self.N          = N
         self.g          = g
@@ -250,11 +290,11 @@ class Verifier (object):
             
             self.b = get_random( 32 )
             self.B = (k*self.v + pow(g, self.b, N)) % N
-            self.u = H(hash_class, self.A, self.B)
+            self.u = H(256, hash_class, self.A, self.B)
             self.S = pow(self.A*pow(self.v, self.u, N ), self.b, N)
             self.K = hash_class( long_to_bytes(self.S) ).digest()
-            self.M = calculate_M( hash_class, N, g, self.I, self.s, self.A, self.B, self.K )
-            self.H_AMK = calculate_H_AMK( hash_class, self.A, self.M, self.K )
+            self.M = calculate_M( nlen, hash_class, N, g, self.I, self.s, self.A, self.B, self.K )
+            self.H_AMK = calculate_H_AMK( nlen, hash_class, self.A, self.M, self.K )
         
         
     def authenticated(self):
@@ -280,7 +320,7 @@ class Verifier (object):
         if not self.safety_failed and user_M == self.M:
             self._authenticated = True
             return self.H_AMK
-        
+'''
         
         
         
@@ -290,13 +330,14 @@ class User (object):
             raise ValueError("Both n_hex and g_hex are required when ng_type = NG_CUSTOM")
         N,g        = get_ng( ng_type, n_hex, g_hex )
         hash_class = _hash_map[ hash_alg ]
-        k          = H( hash_class, N, g )
-        
+        nlen       = len("%x" % N)
+        k          = H(nlen, hash_class, N, g )
+
         self.I     = username
         self.p     = password
         self.a     = get_random( 32 )
         self.A     = pow(g, self.a, N)
-        self.v     = None
+        #self.v     = None
         self.M     = None
         self.K     = None
         self.H_AMK = None
@@ -306,6 +347,7 @@ class User (object):
         self.N          = N
         self.g          = g
         self.k          = k
+        self.nlen       = nlen
         
     
     def authenticated(self):
@@ -321,42 +363,40 @@ class User (object):
     
     
     def start_authentication(self):
-        return (self.I, long_to_bytes(self.A))
-        
-    
-    # Returns M or None if SRP-6a safety check is violated
-    def process_challenge(self, bytes_s, bytes_B):
+        return (self.I, "%x" % self.A)
 
-        self.s = bytes_to_long( bytes_s )
-        self.B = bytes_to_long( bytes_B )
-        
+
+    # Returns M or None if SRP-6a safety check is violated
+    def process_challenge(self, xsalt, xB):
+        self.s = int(xsalt, 16)
+        self.B = int(xB, 16)
+
         N = self.N
         g = self.g
         k = self.k
-        
+        nlen = self.nlen
         hash_class = self.hash_class
-        
+
         # SRP-6a safety check
         if (self.B % N) == 0:
             return None
         
-        self.u = H( hash_class, self.A, self.B )
-        
+        self.u = H( nlen, hash_class, self.A, self.B )
+
         # SRP-6a safety check
         if self.u == 0:
             return None
         
         self.x = gen_x( hash_class, self.s, self.I, self.p )
-        
-        self.v = pow(g, self.x, N)
-        
-        self.S = pow((self.B - k*self.v), (self.a + self.u*self.x), N)
-        
-        self.K     = hash_class( long_to_bytes(self.S) ).digest()        
-        self.M     = calculate_M( hash_class, N, g, self.I, self.s, self.A, self.B, self.K )
-        self.H_AMK = calculate_H_AMK(hash_class, self.A, self.M, self.K)
-        
-        return self.M
+
+        # <client secret> = (B - (k * g^x)) ^ (a + (u * x)) % N
+        self.S = pow((self.B - k*pow(g, self.x, N)), (self.a + self.u*self.x), N)
+        self.K     = hash_class( H_pack("%x" % self.S) ).hexdigest()
+
+        self.M     = calculate_M( nlen, hash_class, N, g, self.I, self.s, self.A, self.B, self.K )
+        self.H_AMK = "%x" % calculate_H_AMK( nlen, hash_class, self.A, self.M, self.K)
+
+        return "%x" % self.M
         
         
     def verify_session(self, host_HAMK):
