@@ -1,8 +1,8 @@
-This is a pure Ruby implementation of the Secure Remote Password protocol (SRP-6a). SRP is a cryptographically strong authentication protocol for password-based, mutual authentication over an insecure network connection.
+This is a pure Ruby implementation of the Secure Remote Password protocol (SRP-6a).
 
-Unlike other common challenge-response autentication protocols, such as Kereros and SSL, SRP does not rely on an external infrastructure of trusted key servers or certificate management. Instead, SRP server applications use verification keys derived from each user's password to determine the authenticity of a network connection.
+SRP is an authentication method that allows the use of user names and passwords over an insecure network connection without revealing the password. If the client side lacks the user's password or the server side lacks the proper verification key, the authentication will fail.
 
-SRP provides mutual-authentication in that successful authentication requires both sides of the connection to have knowledge of the user's password. If the client side lacks the user's password or the server side lacks the proper verification key, the authentication will fail. 
+Unlike other common challenge-response autentication protocols, such as Kerberos and SSL, SRP does not rely on an external infrastructure of trusted key servers or certificate management.
 
 
 References
