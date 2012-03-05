@@ -44,21 +44,28 @@ Usage example
 		session = srp.get_challenge_and_proof(username, v, salt, A)
 
 		# Server sends the challenge containing salt and B to client.
-		client_response = session[:challenge]
+		response = session[:challenge]
 
-		# Server has to remember proof to authenticate the client response.
-		session[:proof] # should be stored to database if server is stateless
+		# Server has to persist proof to authenticate the client response.
+		@proof = session[:proof]
 
 
 	# Server => Client: salt, B
 
+		# Client calculates M as a response to the challenge.
 		client_M = client.process_challenge(username, password, salt, B)
 
 
-	# Client => Server: M
+	# Client => Server: username, M
 
-		server_H_AMK = verifier.verify_session(session[:proof], client_M)
+		# New verifier may be instantiated on the server.
+		verifier = SRP::Verifier.new(prime_length)
+
+		# Verify challenge response M.
+		# The Verifier state is passed in @proof.
+		server_H_AMK = verifier.verify_session(@proof, client_M)
 		# Is false if authentication failed.
+
 
 		# At this point, the client and server should have a common session key
 		# that is secure (i.e. not known to an outside party).  To finish
@@ -66,7 +73,7 @@ Usage example
 		# identical.
 
 
-	# Server => Client: HAMK
+	# Server => Client: H(AMK)
 
 		client.verify(server_H_AMK) == true
 
