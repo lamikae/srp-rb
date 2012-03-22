@@ -55,7 +55,10 @@ user_passwords = {}
 post '/authenticate' do
   username = params[:username]
   _user = user_passwords[username]
-  return JSON.generate({}) unless _user
+  unless _user
+    logger.warn "User #{username} not found"
+    halt 401
+  end
 
   # authentication is two-stage process.
 
@@ -96,5 +99,5 @@ post '/authenticate' do
     end
   end
 
-  return JSON.generate({})
+  halt 401
 end

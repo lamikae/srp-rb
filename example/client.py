@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Example of SRP client.
+Example of SRP client authentication.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -92,7 +92,7 @@ if __name__ == '__main__':
         username = sys.argv[1]
         password = sys.argv[2]
     except:
-        print "give username and password in parameter  ()"
+        print "give username and password in parameters"
         sys.exit(1)
     # ng_type is a constant for choosing prime length N and g.
     # server has to use the same value!
