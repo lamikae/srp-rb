@@ -37,7 +37,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =end
-require "digest"
 require "openssl"
 require "srp-rb/version"
 
@@ -45,11 +44,11 @@ module SRP
   class << self
 
     def sha1_hex(h)
-      Digest::SHA1.hexdigest([h].pack('H*'))
+      OpenSSL::Digest::SHA1.hexdigest([h].pack('H*'))
     end
 
     def sha1_str(s)
-      Digest::SHA1.hexdigest(s)
+      OpenSSL::Digest::SHA1.hexdigest(s)
     end
 
     def bigrand(bytes)
