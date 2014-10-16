@@ -52,12 +52,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import hashlib
 import os
 import binascii
+import sha3
 
 SHA1   = 0
 SHA224 = 1
 SHA256 = 2
 SHA384 = 3
 SHA512 = 4
+SHA3_256 = 5
 
 NG_1024   = 0
 NG_2048   = 1
@@ -65,12 +67,13 @@ NG_4096   = 2
 NG_8192   = 3
 NG_CUSTOM = 4
 
-_hash_map = { SHA1   : hashlib.sha1,
-              SHA224 : hashlib.sha224,
-              SHA256 : hashlib.sha256,
-              SHA384 : hashlib.sha384,
-              SHA512 : hashlib.sha512 }
-              
+_hash_map = { SHA1     : hashlib.sha1,
+              SHA224   : hashlib.sha224,
+              SHA256   : hashlib.sha256,
+              SHA384   : hashlib.sha384,
+              SHA512   : hashlib.sha512,
+              SHA3_256 : hashlib.sha3_256 }
+
 
 _ng_const = (
 # 1024-bit
@@ -186,7 +189,7 @@ def get_random( nbytes ):
 
 def old_H( hash_class, *args, **kwargs ):
     h = hash_class()
-    
+
     for s in args:
         if s is not None:
             h.update( long_to_bytes(s) if isinstance(s, (long, int)) else s )
@@ -198,11 +201,11 @@ def H_pack( instr ):
     """Pack the input string to hex string.
 
     In packed form, every two letters are treated as hexadecimal byte.
-    Ruby equivalent: Array#pack H* hex string (high nibble first) 
+    Ruby equivalent: Array#pack H* hex string (high nibble first)
         Digest::SHA1.hexdigest([instr].pack('H*'))
     """
     if (len(instr) % 2) != 0:
-        instr += "0" 
+        instr += "0"
     return "".join([
         chr(int(instr[i] + instr[i+1], 16)) \
         for i in range(0, len(instr)) \
@@ -243,7 +246,7 @@ def create_salted_verification_key( username, password, hash_alg=SHA1, ng_type=N
     N,g = get_ng( ng_type, n_hex, g_hex )
     _s = long_to_bytes( get_random( 4 ) )
     _v = long_to_bytes( pow(g,  gen_x( hash_class, _s, username, password ), N) )
-    
+
     return _s, _v
 '''
 
@@ -258,10 +261,10 @@ def calculate_H_AMK( nlen, hash_class, A, M, K ):
     return H(nlen, hash_class, A, M, K )
 
 
-  
+
 '''
 class Verifier (object):
-  
+
     def __init__(self, username, bytes_s, bytes_v, bytes_A, hash_alg=SHA1, ng_type=NG_2048, n_hex=None, g_hex=None):
         if ng_type == NG_CUSTOM and (n_hex is None or g_hex is None):
             raise ValueError("Both n_hex and g_hex are required when ng_type = NG_CUSTOM")
@@ -270,7 +273,7 @@ class Verifier (object):
         self.I = username
         self.K = None
         self._authenticated = False
-        
+
         N,g        = get_ng( ng_type, n_hex, g_hex )
         hash_class = _hash_map[ hash_alg ]
         k          = H(256, hash_class, N, g )
@@ -280,14 +283,14 @@ class Verifier (object):
         self.N          = N
         self.g          = g
         self.k          = k
-        
+
         self.A = bytes_to_long(bytes_A)
-        
+
         # SRP-6a safety check
         self.safety_failed = self.A % N == 0
-        
+
         if not self.safety_failed:
-            
+
             self.b = get_random( 32 )
             self.B = (k*self.v + pow(g, self.b, N)) % N
             self.u = H(256, hash_class, self.A, self.B)
@@ -295,37 +298,37 @@ class Verifier (object):
             self.K = hash_class( long_to_bytes(self.S) ).digest()
             self.M = calculate_M( nlen, hash_class, N, g, self.I, self.s, self.A, self.B, self.K )
             self.H_AMK = calculate_H_AMK( nlen, hash_class, self.A, self.M, self.K )
-        
-        
+
+
     def authenticated(self):
         return self._authenticated
-    
-    
+
+
     def get_username(self):
         return self.I
-    
-        
+
+
     def get_session_key(self):
         return self.K if self._authenticated else None
-        
+
     # returns (bytes_s, bytes_B) on success, (None,None) if SRP-6a safety check fails
     def get_challenge(self):
         if self.safety_failed:
             return None,None
         else:
             return (long_to_bytes(self.s), long_to_bytes(self.B))
-        
+
     # returns H_AMK on success, None on failure
     def verify_session(self, user_M):
         if not self.safety_failed and user_M == self.M:
             self._authenticated = True
             return self.H_AMK
 '''
-        
-        
-        
+
+
+
 class User (object):
-    def __init__(self, username, password, hash_alg=SHA1, ng_type=NG_2048, n_hex=None, g_hex=None):
+    def __init__(self, username, password, hash_alg=SHA3_256, ng_type=NG_2048, n_hex=None, g_hex=None):
         if ng_type == NG_CUSTOM and (n_hex is None or g_hex is None):
             raise ValueError("Both n_hex and g_hex are required when ng_type = NG_CUSTOM")
         N,g        = get_ng( ng_type, n_hex, g_hex )
@@ -342,26 +345,26 @@ class User (object):
         self.K     = None
         self.H_AMK = None
         self._authenticated = False
-        
+
         self.hash_class = hash_class
         self.N          = N
         self.g          = g
         self.k          = k
         self.nlen       = nlen
-        
-    
+
+
     def authenticated(self):
         return self._authenticated
-    
-    
+
+
     def get_username(self):
         return self.username
-    
-    
+
+
     def get_session_key(self):
         return self.K if self._authenticated else None
-    
-    
+
+
     def start_authentication(self):
         return (self.I, "%x" % self.A)
 
@@ -380,13 +383,13 @@ class User (object):
         # SRP-6a safety check
         if (self.B % N) == 0:
             return None
-        
+
         self.u = H( nlen, hash_class, self.A, self.B )
 
         # SRP-6a safety check
         if self.u == 0:
             return None
-        
+
         self.x = gen_x( hash_class, self.s, self.I, self.p )
 
         # <client secret> = (B - (k * g^x)) ^ (a + (u * x)) % N
@@ -397,8 +400,8 @@ class User (object):
         self.H_AMK = "%x" % calculate_H_AMK( nlen, hash_class, self.A, self.M, self.K)
 
         return "%x" % self.M
-        
-        
+
+
     def verify_session(self, host_HAMK):
         if self.H_AMK == host_HAMK:
             self._authenticated = True
