@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary     = %q{Secure Remote Password protocol SRP-6a.}
   s.description = %q{
     Ruby implementation of the Secure Remote Password protocol (SRP-6a).
-    SRP is a cryptographically strong authentication protocol for 
+    SRP is a cryptographically strong authentication protocol for
     password-based, mutual authentication over an insecure network connection.}
 
   s.rubyforge_project = "srp-rb"
@@ -19,6 +19,8 @@ Gem::Specification.new do |s|
   s.files         = Dir.glob("lib/**/*")
   s.test_files    = Dir.glob("spec/*")
   s.require_paths = ["lib"]
+
+  s.add_dependency "digest-sha3"
 
   s.add_development_dependency "rspec"
 end

@@ -1,3 +1,5 @@
 *.gem
 .bundle
 Gemfile.lock
+.rspec
+.ruby-*
