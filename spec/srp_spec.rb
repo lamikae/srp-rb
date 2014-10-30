@@ -65,14 +65,14 @@ describe SRP do
 
     it "should calculate k" do
       k = SRP.calc_k(@N, @g)
-      ("%x" % k).should == "344ef594dcb4537649ee16a18d892e5e2a83cfc78a9174731b923916efd46b41"
-      ("%b" % k).length.should == 254
+      ("%x" % k).should == "a392656346edfb80b491d15a1bdadf29e8b2c289b72cd06c9cf940240bcf9b2e"
+      ("%b" % k).length.should == 256
     end
 
     it "should calculate x" do
       x = SRP.calc_x(@username, @password, @salt)
-      ("%x" % x).should == "21fed954b82a4259e2f4b83936cd42753b6e2c665964e4de96d31feed04e4d75"
-      ("%b" % x).length.should == 254
+      ("%x" % x).should == "b115784c3d5ae8e7573eb9879b7e18b66a876ff2201bd57abf7890aee82414e"
+      ("%b" % x).length.should == 252
     end
 
     it "should calculate verifier" do
@@ -86,8 +86,8 @@ describe SRP do
       aa = "b1c4827b0ce416953789db123051ed990023f43b396236b86e12a2c69638fb8e"
       bb = "fbc56086bb51e26ee1a8287c0a7f3fd4e067e55beb8530b869b10b961957ff68"
       u = SRP.calc_u(aa, bb, @N)
-      ("%x" % u).should == "39ea85af480cff7bfbce9ca60d7afc2d8ce352a911a7bddcd8c52fb22118caf4"
-      ("%b" % u).length.should == 254
+      ("%x" % u).should == "72d40e5bbec6e7efc547cbdac99c7338bd8551ae8a9a305370f5c26df84c990b"
+      ("%b" % u).length.should == 255
     end
 
     it "should calculate public client value A" do
@@ -130,17 +130,17 @@ describe SRP do
       xbb = "fbc56086bb51e26ee1a8287c0a7f3fd4e067e55beb8530b869b10b961957ff68"
       xss = "a606c182e364d2c15f9cdbeeeb63bb00c831d1da65eedc1414f21157d0312a5a"
       xkk = SRP.sha3_hex(xss)
-      xkk.should == "52575e538b0ed6e1b868f89ff32340f1702fe7c464f00f0ad25208579e096a00"
+      xkk.should == "f5d30d2ed8686461fc8626357237d6ee03eeeb3e570546cb62081836fdc34df3"
       mm = SRP.calc_M(@username, @salt, xaa, xbb, xkk, @N, @g)
-      ("%x" % mm).should == "8d2786550f2fe49b1056f483db47d4d477676023e5ff06437514f4b4e337f662"
+      ("%x" % mm).should == "bff08229b28c09021c0889019cbecbea5e19ac1eee2ec102ea891f2af43647f9"
     end
 
     it "should calculate H(AMK)" do
       xaa = "b1c4827b0ce416953789db123051ed990023f43b396236b86e12a2c69638fb8e"
-      xmm = "d597503056af882d5b27b419302ac7b2ea9d7468"
-      xkk = "5844898ea6e5f5d9b737bc0ba2fb9d5edd3f8e67"
+      xmm = "bff08229b28c09021c0889019cbecbea5e19ac1eee2ec102ea891f2af43647f9"
+      xkk = "f5d30d2ed8686461fc8626357237d6ee03eeeb3e570546cb62081836fdc34df3"
       h_amk = SRP.calc_H_AMK(xaa, xmm, xkk, @N, @g)
-      ("%x" % h_amk).should == "936e4c66271929d7c8be080466360a97136f5772295a14155f1ecc6d0bbb395f"
+      ("%x" % h_amk).should == "7ba4dd18f68685fa2eb64c474373205160a42aa3e5d4e10e8dd72bd8a4137c77"
     end
   end
 
@@ -218,7 +218,7 @@ describe SRP do
 
     it "should calculate k" do
       k = SRP::Verifier.new(1024).k
-      k.should == 6769446001228734599942679230925490832847633267855114735611032929389517358218
+      k.should == 42563213017296497916222366315348678499853045336041860736166442636932729927292
     end
 
     it "should generate salt and verifier" do
@@ -235,7 +235,7 @@ describe SRP do
       v = auth[:verifier]
       salt = auth[:salt]
       salt.should == @salt
-      v.should == "91bc95c9181a62de1d15c8fe9460b08c2e14f106b2d85555cafba07e5d417fe88b432f68ce473110ae7c8ec37100186f186a2af4a4345f796c3a6d868ace181375938dbfd12355298b76c90b66f0ba35cb330781c3296be690902aaaa6cc2337565f6b5688e466e4bcf701b2164a95e9460cac0b14df182f346c3ce30481aa8e"
+      v.should == "89a0c9a18add0f80c0d03725bf37791f854310756c1d54e5d369ff52b21bc49ebabe7cbcb8e237f9515a175aba8e5be10d855dcfedd3cdaa465fdd51d158889a98d52ab9a62014080ef2f26769a02b3ae64ed378744fc0affedddc26e2a3cc41c020469d95c3a0aff91ff87409a8b4c0c3bd73f2b264b6edb5e5305d2847e764"
     end
 
     it "should generate salt and calculate verifier" do
@@ -248,11 +248,11 @@ describe SRP do
     end
 
     it "should generate B with predefined b" do
-      v = "91bc95c9181a62de1d15c8fe9460b08c2e14f106b2d85555cafba07e5d417fe88b432f68ce473110ae7c8ec37100186f186a2af4a4345f796c3a6d868ace181375938dbfd12355298b76c90b66f0ba35cb330781c3296be690902aaaa6cc2337565f6b5688e466e4bcf701b2164a95e9460cac0b14df182f346c3ce30481aa8e"
+      v = "89a0c9a18add0f80c0d03725bf37791f854310756c1d54e5d369ff52b21bc49ebabe7cbcb8e237f9515a175aba8e5be10d855dcfedd3cdaa465fdd51d158889a98d52ab9a62014080ef2f26769a02b3ae64ed378744fc0affedddc26e2a3cc41c020469d95c3a0aff91ff87409a8b4c0c3bd73f2b264b6edb5e5305d2847e764"
       srp = SRP::Verifier.new(1024)
       srp.set_b @b.to_i(16)
       bb = srp.generate_B(v)
-      bb.should == "103983d545a20584912560261a32b4297e8f78fc9d0a51d9a25b55738f4973333695dc9f2f9df1afdc371ee7e46a3424cbf794a3f744c7182c6bc7552bc069bb7fdc38ca841783d28e09959864ac011d1e27d9c993abe13cc685997bad48639970da2956f6bebbf759145e9c24f44626c8bc39bff9a3b76afe5ddb9fad0e99dd"
+      bb.should == "a638527ee7eeb0488bd73c564578e0f95852ecaf72ef62ae10c9b847da5d7bc4229ecdbb49dc0ff29ce63f6c3731ba03256d4a6ecf219972a65df9d79c1ac04998b961ff21c429883014f89717a54c822d82b316dbb199d241e67ce43ea6b20776c13aa6098b5d3cb12ff5d78ae7c77d215541980da389b24ef525fb8eace617"
     end
 
      it "should generate B" do
@@ -266,37 +266,37 @@ describe SRP do
       # A is received in phase 1
       aa = "165366e23a10006a62fb8a0793757a299e2985103ad2e8cdee0cc37cac109f3f338ee12e2440eda97bfa7c75697709a5dc66faadca7806d43ea5839757d134ae7b28dd3333049198cc8d328998b8cd8352ff4e64b3bd5f08e40148d69b0843bce18cbbb30c7e4760296da5c92717fcac8bddc7875f55302e55d90a34226868d2"
       # B and b are saved from phase 1
-      bb = "103983d545a20584912560261a32b4297e8f78fc9d0a51d9a25b55738f4973333695dc9f2f9df1afdc371ee7e46a3424cbf794a3f744c7182c6bc7552bc069bb7fdc38ca841783d28e09959864ac011d1e27d9c993abe13cc685997bad48639970da2956f6bebbf759145e9c24f44626c8bc39bff9a3b76afe5ddb9fad0e99dd"
+      bb = "a638527ee7eeb0488bd73c564578e0f95852ecaf72ef62ae10c9b847da5d7bc4229ecdbb49dc0ff29ce63f6c3731ba03256d4a6ecf219972a65df9d79c1ac04998b961ff21c429883014f89717a54c822d82b316dbb199d241e67ce43ea6b20776c13aa6098b5d3cb12ff5d78ae7c77d215541980da389b24ef525fb8eace617"
       # v is from db
-      v = "91bc95c9181a62de1d15c8fe9460b08c2e14f106b2d85555cafba07e5d417fe88b432f68ce473110ae7c8ec37100186f186a2af4a4345f796c3a6d868ace181375938dbfd12355298b76c90b66f0ba35cb330781c3296be690902aaaa6cc2337565f6b5688e466e4bcf701b2164a95e9460cac0b14df182f346c3ce30481aa8e"
+      v = "89a0c9a18add0f80c0d03725bf37791f854310756c1d54e5d369ff52b21bc49ebabe7cbcb8e237f9515a175aba8e5be10d855dcfedd3cdaa465fdd51d158889a98d52ab9a62014080ef2f26769a02b3ae64ed378744fc0affedddc26e2a3cc41c020469d95c3a0aff91ff87409a8b4c0c3bd73f2b264b6edb5e5305d2847e764"
       _proof = {:A => aa, :B => bb, :b => @b,
         :I => @username, :s => @salt, :v => v}
       srp = SRP::Verifier.new(1024)
       srp.verify_session(_proof, "match insignificant")
       ss = srp.S
-      ss.should == "6259da3025831c83faecf0dc39336be41bff7f681caa4c8b382b5d2ee243e1a5694f12a981b219704460a6fa722e469700f7d625cc1c4a6a04634d4472b057da8f12042a0d0c6fe7381124ade6981a3f7ea53ff5fed83c66bc06ac690613a4caab70b57c4560bc76fcd2381d4be0d231523be68f2fdaff429f39d4610337ba74"
+      ss.should == "1937e05f33c3b5811b38968aae84a5abfaf0477c3ba91584fb88866e4ccb67a759be937e329c08b71a304521d4ed92e7e65bf48826faa6987a13dc050e62ae772c6f97fe7218de53c1dbe215a7f934555d9da22543f73ae47aea7484fbe2e335464c9574c4b9a88e12d77e98a0b24a84581df355fbdbd1d2c15518341e0df966"
       kk = srp.K
-      kk.should == "1e0e3c6658a1813d471434adba9f7af7b1cd87b5ae24be593cecd8c45830276c"
+      kk.should == "cfb7ee28c9c6539483482e71d7bd35898dd3e8de0f014a9d63a9b52d380623b7"
     end
 
     it "should calculate verifier M and server proof" do
       # A is received in phase 1
       aa = "165366e23a10006a62fb8a0793757a299e2985103ad2e8cdee0cc37cac109f3f338ee12e2440eda97bfa7c75697709a5dc66faadca7806d43ea5839757d134ae7b28dd3333049198cc8d328998b8cd8352ff4e64b3bd5f08e40148d69b0843bce18cbbb30c7e4760296da5c92717fcac8bddc7875f55302e55d90a34226868d2"
       # B and b are saved from phase 1
-      bb = "103983d545a20584912560261a32b4297e8f78fc9d0a51d9a25b55738f4973333695dc9f2f9df1afdc371ee7e46a3424cbf794a3f744c7182c6bc7552bc069bb7fdc38ca841783d28e09959864ac011d1e27d9c993abe13cc685997bad48639970da2956f6bebbf759145e9c24f44626c8bc39bff9a3b76afe5ddb9fad0e99dd"
+      bb = "a638527ee7eeb0488bd73c564578e0f95852ecaf72ef62ae10c9b847da5d7bc4229ecdbb49dc0ff29ce63f6c3731ba03256d4a6ecf219972a65df9d79c1ac04998b961ff21c429883014f89717a54c822d82b316dbb199d241e67ce43ea6b20776c13aa6098b5d3cb12ff5d78ae7c77d215541980da389b24ef525fb8eace617"
       # v is from db
-      v = "91bc95c9181a62de1d15c8fe9460b08c2e14f106b2d85555cafba07e5d417fe88b432f68ce473110ae7c8ec37100186f186a2af4a4345f796c3a6d868ace181375938dbfd12355298b76c90b66f0ba35cb330781c3296be690902aaaa6cc2337565f6b5688e466e4bcf701b2164a95e9460cac0b14df182f346c3ce30481aa8e"
+      v = "89a0c9a18add0f80c0d03725bf37791f854310756c1d54e5d369ff52b21bc49ebabe7cbcb8e237f9515a175aba8e5be10d855dcfedd3cdaa465fdd51d158889a98d52ab9a62014080ef2f26769a02b3ae64ed378744fc0affedddc26e2a3cc41c020469d95c3a0aff91ff87409a8b4c0c3bd73f2b264b6edb5e5305d2847e764"
       # S is validated
-      ss = "6259da3025831c83faecf0dc39336be41bff7f681caa4c8b382b5d2ee243e1a5694f12a981b219704460a6fa722e469700f7d625cc1c4a6a04634d4472b057da8f12042a0d0c6fe7381124ade6981a3f7ea53ff5fed83c66bc06ac690613a4caab70b57c4560bc76fcd2381d4be0d231523be68f2fdaff429f39d4610337ba74"
+      ss = "1937e05f33c3b5811b38968aae84a5abfaf0477c3ba91584fb88866e4ccb67a759be937e329c08b71a304521d4ed92e7e65bf48826faa6987a13dc050e62ae772c6f97fe7218de53c1dbe215a7f934555d9da22543f73ae47aea7484fbe2e335464c9574c4b9a88e12d77e98a0b24a84581df355fbdbd1d2c15518341e0df966"
       # K = H(S)
       kk = SRP.sha3_hex(ss)
-      client_M = "48311510f95ff48731e57166bfaa9af4eecc78974314da7b9e296d0925dc0e0a"
-      _proof = {:A => aa, :B => bb, :b => @b, 
+      client_M = "2e622470344d2ef11a36dc82227bbd0023b80f28004c5cb71d04e659b968ee8f"
+      _proof = {:A => aa, :B => bb, :b => @b,
         :I => @username, :s => @salt, :v => v}
       srp = SRP::Verifier.new(1024)
       srp.verify_session(_proof, client_M)
       srp.M.should == client_M
-      srp.H_AMK.should == "8d85ae8466cf47b1e1e7164fb58bd223c28049b69ed2a897bfc3b02b5ad7097a"
+      srp.H_AMK.should == "7e413ee435bd3668179d941c3ef33a992bb2d2e5286161b440921d92346e5c03"
     end
   end
 
@@ -338,12 +338,12 @@ describe SRP do
       srp = SRP::Client.new(1024)
       srp.set_a @a.to_i(16)
       aa = srp.generate_A # created in phase 1
-      bb = "103983d545a20584912560261a32b4297e8f78fc9d0a51d9a25b55738f4973333695dc9f2f9df1afdc371ee7e46a3424cbf794a3f744c7182c6bc7552bc069bb7fdc38ca841783d28e09959864ac011d1e27d9c993abe13cc685997bad48639970da2956f6bebbf759145e9c24f44626c8bc39bff9a3b76afe5ddb9fad0e99dd"
+      bb = "a638527ee7eeb0488bd73c564578e0f95852ecaf72ef62ae10c9b847da5d7bc4229ecdbb49dc0ff29ce63f6c3731ba03256d4a6ecf219972a65df9d79c1ac04998b961ff21c429883014f89717a54c822d82b316dbb199d241e67ce43ea6b20776c13aa6098b5d3cb12ff5d78ae7c77d215541980da389b24ef525fb8eace617"
       mm = srp.process_challenge(@username, @password, @salt, bb)
       ss = srp.S
-      ss.should == "6259da3025831c83faecf0dc39336be41bff7f681caa4c8b382b5d2ee243e1a5694f12a981b219704460a6fa722e469700f7d625cc1c4a6a04634d4472b057da8f12042a0d0c6fe7381124ade6981a3f7ea53ff5fed83c66bc06ac690613a4caab70b57c4560bc76fcd2381d4be0d231523be68f2fdaff429f39d4610337ba74"
+      ss.should == "1937e05f33c3b5811b38968aae84a5abfaf0477c3ba91584fb88866e4ccb67a759be937e329c08b71a304521d4ed92e7e65bf48826faa6987a13dc050e62ae772c6f97fe7218de53c1dbe215a7f934555d9da22543f73ae47aea7484fbe2e335464c9574c4b9a88e12d77e98a0b24a84581df355fbdbd1d2c15518341e0df966"
       kk = srp.K
-      kk.should == "1e0e3c6658a1813d471434adba9f7af7b1cd87b5ae24be593cecd8c45830276c"
+      kk.should == "cfb7ee28c9c6539483482e71d7bd35898dd3e8de0f014a9d63a9b52d380623b7"
     end
   end
 

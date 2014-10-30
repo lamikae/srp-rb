@@ -45,7 +45,7 @@ module SRP
   class << self
 
     def sha3_hex(h)
-      Digest::SHA3.hexdigest([h].pack('H*'), 256)
+      Digest::SHA3.hexdigest([h].pack('H*').bytes.pack('U*'), 256)
     end
 
     def sha3_str(s)
